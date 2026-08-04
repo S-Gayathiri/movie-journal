@@ -23,6 +23,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
 
+  // Track collapsed years on the timeline (stores collapsed year numbers)
+  const [collapsedYears, setCollapsedYears] = useState<number[]>([]);
+
   // Expanded year stats accordion state
   const [expandedYearStats, setExpandedYearStats] = useState<number | null>(null);
 
@@ -92,6 +95,14 @@ export default function Home() {
       }
     }
     return dateString;
+  };
+
+  const toggleYearCollapse = (year: number) => {
+    if (collapsedYears.includes(year)) {
+      setCollapsedYears(collapsedYears.filter((y) => y !== year));
+    } else {
+      setCollapsedYears([...collapsedYears, year]);
+    }
   };
 
   const startEditing = (movie: Movie) => {
@@ -271,7 +282,7 @@ export default function Home() {
     return (
       <main className="min-h-screen bg-[#141414] text-[#F5F2EB] p-6 flex flex-col items-center justify-center max-w-md mx-auto text-center space-y-6 animate-fadeIn">
         <div className="bg-[#1C1C1C]/90 backdrop-blur-md border border-[#2D2D2D]/60 p-8 rounded-[24px] shadow-2xl w-full space-y-5">
-          <h1 className="text-3xl font-serif font-normal text-[#F5F2EB] tracking-wide">❤️ Movie Journal</h1>
+          <h1 className="text-3xl font-serif font-normal text-[#F5F2EB] tracking-wide">❤️ Reel & Real</h1>
           <p className="text-[#A8A59F] text-sm font-sans leading-relaxed">Every movie tells our story. Please sign in to open our journal.</p>
           <button
             onClick={handleGoogleLogin}
@@ -305,7 +316,7 @@ export default function Home() {
           {/* Header & Tagline */}
           <div className="flex justify-between items-center pt-2">
             <div>
-              <h1 className="text-2xl font-serif font-normal text-[#F5F2EB] tracking-wide">❤️ Movie Journal</h1>
+              <h1 className="text-2xl font-serif font-normal text-[#F5F2EB] tracking-wide">❤️ Reel & Real</h1>
               <p className="text-xs text-[#A8A59F] mt-1 italic font-serif tracking-wide">Every movie tells our story.</p>
             </div>
             <div className="flex items-center gap-2">
@@ -363,7 +374,7 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Vertical Timeline Grouped by Year with "Our History" Header */}
+              {/* Vertical Timeline Grouped by Collapsible Year */}
               <div className="pt-2 space-y-6">
                 <div className="flex items-center gap-3">
                   <h2 className="text-base font-serif font-normal text-[#F5F2EB] tracking-wide">Our History</h2>
@@ -374,37 +385,51 @@ export default function Home() {
                   .sort((a, b) => b - a)
                   .map((year) => {
                     const yearMovies = movies.filter((m) => new Date(m.date).getFullYear() === year);
+                    const isCollapsed = collapsedYears.includes(year);
 
                     return (
-                      <div key={year} className="space-y-4">
-                        <span className="text-xs font-serif font-medium text-[#E6C687] tracking-wider uppercase block">{year}</span>
+                      <div key={year} className="space-y-4 bg-[#1C1C1C]/40 border border-[#262626] p-4 rounded-[22px]">
+                        {/* Collapsible Year Header */}
+                        <div
+                          onClick={() => toggleYearCollapse(year)}
+                          className="flex justify-between items-center cursor-pointer select-none group"
+                        >
+                          <span className="text-xs font-serif font-medium text-[#E6C687] tracking-wider uppercase">
+                            {year} ({yearMovies.length} memories)
+                          </span>
+                          <span className="text-xs text-[#8A8780] group-hover:text-[#F5F2EB] transition-colors">
+                            {isCollapsed ? 'Expand ▼' : 'Collapse ▲'}
+                          </span>
+                        </div>
 
-                        <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-[#282828]">
-                          {yearMovies.map((movie) => (
-                            <div
-                              key={movie.id}
-                              onClick={() => setSelectedMovie(movie)}
-                              className="relative group cursor-pointer"
-                            >
-                              <div className="absolute -left-[23px] top-1 w-6 h-6 rounded-full bg-[#1C1C1C] border border-[#383838] flex items-center justify-center text-[10px] shadow-sm group-hover:border-[#E6C687] transition-colors">
-                                ❤️
-                              </div>
+                        {!isCollapsed && (
+                          <div className="relative pl-6 space-y-6 pt-2 before:absolute before:left-[11px] before:top-4 before:bottom-2 before:w-[2px] before:bg-[#282828]">
+                            {yearMovies.map((movie) => (
+                              <div
+                                key={movie.id}
+                                onClick={() => setSelectedMovie(movie)}
+                                className="relative group cursor-pointer"
+                              >
+                                <div className="absolute -left-[23px] top-1 w-6 h-6 rounded-full bg-[#1C1C1C] border border-[#383838] flex items-center justify-center text-[10px] shadow-sm group-hover:border-[#E6C687] transition-colors">
+                                  ❤️
+                                </div>
 
-                              <div className="bg-[#1C1C1C]/60 backdrop-blur-sm border border-[#282828]/70 p-4 rounded-[20px] group-hover:border-[#E6C687]/40 group-hover:bg-[#1C1C1C]/90 group-hover:shadow-md transition-all transform group-hover:scale-[1.01]">
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <span className="text-[11px] font-medium text-[#E6C687] tracking-wider">{formatHumanDate(movie.date)}</span>
-                                    <h3 className="font-serif font-normal text-lg text-[#F5F2EB] mt-0.5">{movie.name}</h3>
-                                    <p className="text-xs text-[#8A8780] font-sans mt-0.5 flex items-center gap-1">
-                                      <span>📍</span> {movie.theatre}
-                                    </p>
+                                <div className="bg-[#1C1C1C]/80 backdrop-blur-sm border border-[#282828]/70 p-4 rounded-[20px] group-hover:border-[#E6C687]/40 group-hover:bg-[#1C1C1C] group-hover:shadow-md transition-all transform group-hover:scale-[1.01]">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <span className="text-[11px] font-medium text-[#E6C687] tracking-wider">{formatHumanDate(movie.date)}</span>
+                                      <h3 className="font-serif font-normal text-lg text-[#F5F2EB] mt-0.5">{movie.name}</h3>
+                                      <p className="text-xs text-[#8A8780] font-sans mt-0.5 flex items-center gap-1">
+                                        <span>📍</span> {movie.theatre}
+                                      </p>
+                                    </div>
+                                    <span className="text-[#E6C687] text-xs font-semibold">{movie.rating}</span>
                                   </div>
-                                  <span className="text-[#E6C687] text-xs font-semibold">{movie.rating}</span>
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
