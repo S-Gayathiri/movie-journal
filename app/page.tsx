@@ -23,7 +23,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
 
-  // Expanded year stats accordion state (e.g. tracks which year is open in the stats tab)
+  // Expanded year stats accordion state
   const [expandedYearStats, setExpandedYearStats] = useState<number | null>(null);
 
   // Form states (Add & Edit)
@@ -246,7 +246,6 @@ export default function Home() {
   };
 
   // Dynamic stats calculations
-  const totalMemories = movies.length;
   let daysSinceFirst = 0;
   if (movies.length > 0) {
     const firstMovieDate = new Date(movies[0].date).getTime();
@@ -272,7 +271,7 @@ export default function Home() {
     return (
       <main className="min-h-screen bg-[#141414] text-[#F5F2EB] p-6 flex flex-col items-center justify-center max-w-md mx-auto text-center space-y-6 animate-fadeIn">
         <div className="bg-[#1C1C1C]/90 backdrop-blur-md border border-[#2D2D2D]/60 p-8 rounded-[24px] shadow-2xl w-full space-y-5">
-          <h1 className="text-3xl font-serif font-normal text-[#F5F2EB] tracking-wide">❤️ Movie Journal</h1>
+          <h1 className="text-3xl font-serif font-normal text-[#F5F2EB] tracking-wide">❤️ Reel & Real</h1>
           <p className="text-[#A8A59F] text-sm font-sans leading-relaxed">Every movie tells our story. Please sign in to open our journal.</p>
           <button
             onClick={handleGoogleLogin}
@@ -306,7 +305,7 @@ export default function Home() {
           {/* Header & Tagline */}
           <div className="flex justify-between items-center pt-2">
             <div>
-              <h1 className="text-2xl font-serif font-normal text-[#F5F2EB] tracking-wide">❤️ Movie Journal</h1>
+              <h1 className="text-2xl font-serif font-normal text-[#F5F2EB] tracking-wide">❤️ Reel & Real</h1>
               <p className="text-xs text-[#A8A59F] mt-1 italic font-serif tracking-wide">Every movie tells our story.</p>
             </div>
             <div className="flex items-center gap-2">
@@ -438,7 +437,6 @@ export default function Home() {
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
-                        {/* Clicking this card toggles the movie list dropdown */}
                         <div
                           onClick={() => setExpandedYearStats(isExpanded ? null : year)}
                           className="bg-[#1C1C1C]/80 border border-[#2D2D2D]/80 hover:border-[#E6C687]/40 p-4 rounded-[22px] shadow-sm space-y-1 cursor-pointer transition-all"
@@ -456,7 +454,6 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Dropdown list of movie names when clicked */}
                       {isExpanded && (
                         <div className="bg-[#181818] border border-[#2D2D2D] rounded-[20px] p-4 space-y-2 animate-fadeIn">
                           <p className="text-[11px] text-[#8A8780] uppercase tracking-wider font-semibold mb-2">Movie List ({year}):</p>
@@ -694,10 +691,10 @@ export default function Home() {
           </form>
         </div>
       ) : (
-        /* Emotional Movie Details View with Edit Button */
+        /* Emotional Movie Details View with Safe Optional Chaining for TypeScript */
         <div className="space-y-5 animate-slideUp relative z-10">
 
-          {selectedMovie.media_url && (
+          {selectedMovie?.media_url && (
             <div className="absolute inset-0 -mx-6 -mt-6 h-96 overflow-hidden pointer-events-none opacity-20 filter blur-3xl z-0">
               <img src={selectedMovie.media_url} alt="" className="w-full h-full object-cover" />
             </div>
@@ -713,7 +710,7 @@ export default function Home() {
               </button>
 
               <button
-                onClick={() => startEditing(selectedMovie)}
+                onClick={() => selectedMovie && startEditing(selectedMovie)}
                 className="bg-[#262626] border border-[#383838] text-[#E6C687] px-4 py-2 rounded-[16px] text-xs font-medium hover:bg-[#303030] transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
               >
                 <span>✏️</span> Edit Memory
@@ -723,9 +720,9 @@ export default function Home() {
             <div className="bg-[#1C1C1C]/85 backdrop-blur-xl border border-[#2D2D2D] p-7 rounded-[28px] space-y-6 shadow-2xl">
 
               <div className="space-y-2">
-                <span className="text-[#E6C687] text-sm tracking-widest">{selectedMovie.rating}</span>
-                <h2 className="text-3xl font-serif font-normal text-[#F5F2EB]">{selectedMovie.name}</h2>
-                <p className="text-xs text-[#8A8780] font-sans">📅 {formatHumanDate(selectedMovie.date)} • 📍 {selectedMovie.theatre}</p>
+                <span className="text-[#E6C687] text-sm tracking-widest">{selectedMovie?.rating}</span>
+                <h2 className="text-3xl font-serif font-normal text-[#F5F2EB]">{selectedMovie?.name}</h2>
+                <p className="text-xs text-[#8A8780] font-sans">📅 {formatHumanDate(selectedMovie?.date || '')} • 📍 {selectedMovie?.theatre}</p>
               </div>
 
               <div className="border-t border-[#2A2A2A]"></div>
@@ -735,17 +732,17 @@ export default function Home() {
                   <span>❤️</span> One Memory
                 </span>
                 <p className="text-base font-serif text-[#F5F2EB] leading-relaxed italic">
-                  &ldquo;{selectedMovie.memory}&rdquo;
+                  &ldquo;{selectedMovie?.memory}&rdquo;
                 </p>
               </div>
 
-              {selectedMovie.media_url && (
+              {selectedMovie?.media_url && (
                 <div className="pt-2 space-y-2">
                   <p className="text-xs text-[#8A8780] font-medium tracking-wider uppercase font-sans">🎟️ Ticket & Photo Gallery</p>
                   <div className="rounded-[20px] overflow-hidden border border-[#2D2D2D] bg-[#141414] shadow-md">
                     <img
                       src={selectedMovie.media_url}
-                      alt={selectedMovie.name}
+                      alt={selectedMovie?.name}
                       className="w-full object-cover max-h-72 hover:scale-105 transition-transform duration-500"
                     />
                   </div>
