@@ -16,7 +16,7 @@ interface Movie {
 // 🔐 ADD YOUR EMAIL AND YOUR PARTNER'S EMAIL HERE
 const ALLOWED_EMAILS = [
   'gayathirisrinivasan56@gmail.com',
-  // 'partner-email@gmail.com' <-- Add partner's email inside quotes here
+  'gayunave1808@gmail.com'
 ];
 
 export default function Home() {
