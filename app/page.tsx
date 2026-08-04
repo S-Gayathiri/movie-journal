@@ -282,7 +282,7 @@ export default function Home() {
     return (
       <main className="min-h-screen bg-[#141414] text-[#F5F2EB] p-6 flex flex-col items-center justify-center max-w-md mx-auto text-center space-y-6 animate-fadeIn">
         <div className="bg-[#1C1C1C]/90 backdrop-blur-md border border-[#2D2D2D]/60 p-8 rounded-[24px] shadow-2xl w-full space-y-5">
-          <h1 className="text-3xl font-serif font-normal text-[#F5F2EB] tracking-wide">❤️ Reel & Real</h1>
+          <h1 className="text-3xl font-serif font-normal text-[#F5F2EB] tracking-wide">❤️ Movie Journal</h1>
           <p className="text-[#A8A59F] text-sm font-sans leading-relaxed">Every movie tells our story. Please sign in to open our journal.</p>
           <button
             onClick={handleGoogleLogin}
@@ -316,7 +316,7 @@ export default function Home() {
           {/* Header & Tagline */}
           <div className="flex justify-between items-center pt-2">
             <div>
-              <h1 className="text-2xl font-serif font-normal text-[#F5F2EB] tracking-wide">❤️ Reel & Real</h1>
+              <h1 className="text-2xl font-serif font-normal text-[#F5F2EB] tracking-wide">❤️ Movie Journal</h1>
               <p className="text-xs text-[#A8A59F] mt-1 italic font-serif tracking-wide">Every movie tells our story.</p>
             </div>
             <div className="flex items-center gap-2">
