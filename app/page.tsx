@@ -111,7 +111,7 @@ export default function Home() {
       const year = parts[0];
       const monthIndex = parseInt(parts[1], 10) - 1;
       const day = parseInt(parts[2], 10);
-      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const months = ['January', 'Feb', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
       if (months[monthIndex]) {
         return `${day} ${months[monthIndex]} ${year}`;
       }
