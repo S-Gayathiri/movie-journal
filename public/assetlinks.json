@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.movie_journal_rho.twa",
+        "sha256_cert_fingerprints": ["92:BD:78:A4:FE:6A:3D:D0:3E:E1:AC:63:63:B7:D2:2E:94:34:92:38:86:2E:6B:11:AA:8E:10:CC:0C:31:93:E8"]
+      }
+    }]
