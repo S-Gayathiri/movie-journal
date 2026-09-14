@@ -41,7 +41,7 @@ export default function Home() {
         if (isNaN(timeA) && isNaN(timeB)) return 0;
         if (isNaN(timeA)) return 1; // push invalid to bottom
         if (isNaN(timeB)) return -1;
-        return timeA - timeB;
+        return timeB - timeA;
       });
       setMovies(sorted);
     } catch (err) {
