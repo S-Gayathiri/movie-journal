@@ -34,8 +34,14 @@ export default function Home() {
   async function fetchMovies() {
     try {
       setLoading(true);
-      const data = await getMovies();
-      const sorted = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const sorted = data.sort((a, b) => {
+        const timeA = new Date(a.date).getTime();
+        const timeB = new Date(b.date).getTime();
+        if (isNaN(timeA) && isNaN(timeB)) return 0;
+        if (isNaN(timeA)) return 1; // push invalid to bottom
+        if (isNaN(timeB)) return -1;
+        return timeA - timeB;
+      });
       setMovies(sorted);
     } catch (err) {
       console.error('Error fetching movies:', err);
@@ -265,11 +271,21 @@ export default function Home() {
                   <div className="h-[1px] bg-[#2A2A2A] flex-1"></div>
                 </div>
 
-                {Array.from(new Set(movies.map((m) => new Date(m.date).getFullYear())))
-                  .sort((a, b) => b - a)
+                {Array.from(new Set(movies.map((m) => {
+                  const y = new Date(m.date).getFullYear();
+                  return isNaN(y) ? 'Unknown' : y;
+                })))
+                  .sort((a, b) => {
+                    if (a === 'Unknown') return 1;
+                    if (b === 'Unknown') return -1;
+                    return (b as number) - (a as number);
+                  })
                   .map((year) => {
-                    const yearMovies = movies.filter((m) => new Date(m.date).getFullYear() === year);
-                    const isCollapsed = collapsedYears.includes(year);
+                    const yearMovies = movies.filter((m) => {
+                      const y = new Date(m.date).getFullYear();
+                      return isNaN(y) ? year === 'Unknown' : y === year;
+                    });
+                    const isCollapsed = collapsedYears.includes(year as number);
 
                     return (
                       <div key={year} className="space-y-4 bg-[#1C1C1C]/40 border border-[#262626] p-4 rounded-[22px]">
@@ -322,12 +338,22 @@ export default function Home() {
           ) : (
             /* Milestones & Clickable Year-Wise Statistics View */
             <div className="space-y-6 animate-fadeIn">
-              {Array.from(new Set(movies.map((m) => new Date(m.date).getFullYear())))
-                .sort((a, b) => b - a)
+              {Array.from(new Set(movies.map((m) => {
+                  const y = new Date(m.date).getFullYear();
+                  return isNaN(y) ? 'Unknown' : y;
+                })))
+                .sort((a, b) => {
+                    if (a === 'Unknown') return 1;
+                    if (b === 'Unknown') return -1;
+                    return (b as number) - (a as number);
+                })
                 .map((year) => {
-                  const yearMovies = movies.filter((m) => new Date(m.date).getFullYear() === year);
+                  const yearMovies = movies.filter((m) => {
+                      const y = new Date(m.date).getFullYear();
+                      return isNaN(y) ? year === 'Unknown' : y === year;
+                  });
                   const yearTotal = yearMovies.length;
-                  const isExpanded = expandedYearStats === year;
+                  const isExpanded = expandedYearStats === (year as number);
 
                   let yearAvgRating = '5.0';
                   if (yearTotal > 0) {
