@@ -13,10 +13,10 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
 
   // Track collapsed years on the timeline (stores collapsed year numbers)
-  const [collapsedYears, setCollapsedYears] = useState<number[]>([]);
+  const [collapsedYears, setCollapsedYears] = useState<(number | 'Unknown')[]>([]);
 
   // Expanded year stats accordion state
-  const [expandedYearStats, setExpandedYearStats] = useState<number | null>(null);
+  const [expandedYearStats, setExpandedYearStats] = useState<number | 'Unknown' | null>(null);
 
   // Form states (Add & Edit)
   const [name, setName] = useState('');
@@ -67,7 +67,7 @@ export default function Home() {
     return dateString;
   };
 
-  const toggleYearCollapse = (year: number) => {
+  const toggleYearCollapse = (year: number | 'Unknown') => {
     if (collapsedYears.includes(year)) {
       setCollapsedYears(collapsedYears.filter((y) => y !== year));
     } else {
