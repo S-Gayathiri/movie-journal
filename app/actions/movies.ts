@@ -68,7 +68,17 @@ export async function addMovie(movieData: Omit<Movie, 'id'>) {
     };
     
     await sheet.addRow(newRow);
-    return { success: true, movie: newRow };
+    return { 
+      success: true, 
+      movie: {
+        id: newId,
+        name: movieData.name,
+        date: movieData.date,
+        theatre: movieData.theatre,
+        rating: movieData.rating,
+        memory: movieData.memory
+      } 
+    };
   } catch (error) {
     console.error('Failed to add movie', error);
     return { success: false, error: 'Failed to add movie' };
@@ -91,7 +101,17 @@ export async function updateMovie(id: number, movieData: Omit<Movie, 'id'>) {
     targetRow.set('Memory', movieData.memory);
     
     await targetRow.save();
-    return { success: true, movie: { id, ...movieData } };
+    return { 
+      success: true, 
+      movie: { 
+        id, 
+        name: movieData.name,
+        date: movieData.date,
+        theatre: movieData.theatre,
+        rating: movieData.rating,
+        memory: movieData.memory
+      } 
+    };
   } catch (error) {
     console.error('Failed to update movie', error);
     return { success: false, error: 'Failed to update movie' };
