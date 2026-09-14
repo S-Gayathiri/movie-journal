@@ -1,26 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from './lib/supabase';
-
-interface Movie {
-  id: number;
-  name: string;
-  date: string;
-  theatre: string;
-  rating: string;
-  memory: string;
-  media_url?: string;
-}
-
-// 🔐 ADD YOUR EMAIL AND YOUR PARTNER'S EMAIL HERE
-const ALLOWED_EMAILS = [
-  'gayathirisrinivasan56@gmail.com',
-  'gayunave1808@gmail.com'
-];
+import { getMovies, addMovie, updateMovie, deleteMovie, Movie } from './actions/movies';
 
 export default function Home() {
-  const [session, setSession] = useState<any>(null);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [activeTab, setActiveTab] = useState<'timeline' | 'stats'>('timeline');
@@ -41,67 +24,25 @@ export default function Home() {
   const [theatre, setTheatre] = useState('');
   const [rating, setRating] = useState('4.9 ⭐');
   const [memory, setMemory] = useState('');
-  const [file, setFile] = useState<File | null>(null);
 
   const isSpecialDay = true;
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        const userEmail = session.user?.email;
-        if (userEmail && ALLOWED_EMAILS.includes(userEmail)) {
-          fetchMovies();
-        } else {
-          setLoading(false);
-        }
-      } else {
-        setLoading(false);
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        const userEmail = session.user?.email;
-        if (userEmail && ALLOWED_EMAILS.includes(userEmail)) {
-          fetchMovies();
-        } else {
-          setLoading(false);
-        }
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    fetchMovies();
   }, []);
 
   async function fetchMovies() {
     try {
-      const { data, error } = await supabase.from('movies').select('*');
-      if (error) throw error;
-      if (data) {
-        const sorted = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        setMovies(sorted);
-      }
+      setLoading(true);
+      const data = await getMovies();
+      const sorted = data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      setMovies(sorted);
     } catch (err) {
       console.error('Error fetching movies:', err);
     } finally {
       setLoading(false);
     }
   }
-
-  const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin }
-    });
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
 
   const formatHumanDate = (dateString: string) => {
     if (!dateString) return '';
@@ -134,19 +75,14 @@ export default function Home() {
     setTheatre(movie.theatre);
     setRating(movie.rating);
     setMemory(movie.memory);
-    setFile(null);
   };
 
   const handleDeleteMovie = async (id: number) => {
     if (!confirm('Are you sure you want to delete this movie memory?')) return;
 
     try {
-      const { error } = await supabase
-        .from('movies')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      const res = await deleteMovie(id);
+      if (!res.success) throw new Error(res.error);
 
       setMovies(movies.filter((m) => m.id !== id));
       setEditingMovie(null);
@@ -161,25 +97,8 @@ export default function Home() {
     if (!editingMovie || !name || !date || !theatre) return;
 
     setUploading(true);
-    let mediaUrl = editingMovie.media_url;
 
     try {
-      if (file) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('movie-media')
-          .upload(fileName, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: publicData } = supabase.storage
-          .from('movie-media')
-          .getPublicUrl(fileName);
-
-        mediaUrl = publicData.publicUrl;
-      }
-
       const formattedRating = rating.includes('⭐') ? rating : `${rating} ⭐`;
       const updatedData = {
         name,
@@ -187,25 +106,12 @@ export default function Home() {
         theatre,
         rating: formattedRating,
         memory,
-        media_url: mediaUrl
       };
 
-      const { error } = await supabase
-        .from('movies')
-        .update(updatedData)
-        .eq('id', editingMovie.id);
+      const res = await updateMovie(editingMovie.id, updatedData);
+      if (!res.success) throw new Error(res.error);
 
-      if (error) throw error;
-
-      const savedMovie: Movie = {
-        id: editingMovie.id,
-        name,
-        date,
-        theatre,
-        rating: formattedRating,
-        memory,
-        media_url: mediaUrl
-      };
+      const savedMovie = res.movie as Movie;
 
       const updatedMovies = movies
         .map((m) => (m.id === editingMovie.id ? savedMovie : m))
@@ -214,7 +120,6 @@ export default function Home() {
       setMovies(updatedMovies);
       setSelectedMovie(savedMovie);
       setEditingMovie(null);
-      setFile(null);
     } catch (err: any) {
       alert(`Failed to update: ${err?.message || 'Unknown error'}`);
     } finally {
@@ -227,25 +132,8 @@ export default function Home() {
     if (!name || !date || !theatre) return;
 
     setUploading(true);
-    let mediaUrl = '';
 
     try {
-      if (file) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from('movie-media')
-          .upload(fileName, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: publicData } = supabase.storage
-          .from('movie-media')
-          .getPublicUrl(fileName);
-
-        mediaUrl = publicData.publicUrl;
-      }
-
       const formattedRating = rating.includes('⭐') ? rating : `${rating} ⭐`;
 
       const newMovieData = {
@@ -254,15 +142,13 @@ export default function Home() {
         theatre,
         rating: formattedRating,
         memory: memory || "Another magical movie memory together.",
-        media_url: mediaUrl || null
       };
 
-      const { data, error } = await supabase.from('movies').insert([newMovieData]).select();
-      if (error) throw error;
-      if (data) {
-        const updated = [...movies, data[0]].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        setMovies(updated);
-      }
+      const res = await addMovie(newMovieData);
+      if (!res.success) throw new Error(res.error);
+
+      const updated = [...movies, res.movie as Movie].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      setMovies(updated);
 
       setIsAdding(false);
       setName('');
@@ -270,7 +156,6 @@ export default function Home() {
       setTheatre('');
       setRating('4.9 ⭐');
       setMemory('');
-      setFile(null);
     } catch (err: any) {
       alert(`Failed: ${err?.message || 'Unknown error'}`);
     } finally {
@@ -298,46 +183,6 @@ export default function Home() {
 
   if (loading) {
     return <main className="min-h-screen bg-[#141414] text-[#F5F2EB] p-6 flex items-center justify-center font-serif tracking-wide animate-fadeIn">Opening our journal...</main>;
-  }
-
-  // Check if session exists but email is NOT in the whitelist
-  const userEmail = session?.user?.email;
-  const isAuthorized = session && userEmail && ALLOWED_EMAILS.includes(userEmail);
-
-  if (session && !isAuthorized) {
-    return (
-      <main className="min-h-screen bg-[#141414] text-[#F5F2EB] p-6 flex flex-col items-center justify-center max-w-md mx-auto text-center space-y-6 animate-fadeIn">
-        <div className="bg-[#1C1C1C]/90 backdrop-blur-md border border-[#D94F4F]/40 p-8 rounded-[24px] shadow-2xl w-full space-y-5">
-          <h1 className="text-2xl font-serif font-normal text-[#F5F2EB]">🔒 Private Journal</h1>
-          <p className="text-[#A8A59F] text-xs font-sans leading-relaxed">
-            Sorry, <span className="text-[#E6C687]">{userEmail}</span> is not authorized to access this private journal.
-          </p>
-          <button
-            onClick={handleLogout}
-            className="w-full bg-[#262626] border border-[#383838] text-[#F5F2EB] font-medium py-3 px-4 rounded-[16px] hover:bg-[#303030] transition-all cursor-pointer text-xs font-sans"
-          >
-            Sign out & try another account
-          </button>
-        </div>
-      </main>
-    );
-  }
-
-  if (!session) {
-    return (
-      <main className="min-h-screen bg-[#141414] text-[#F5F2EB] p-6 flex flex-col items-center justify-center max-w-md mx-auto text-center space-y-6 animate-fadeIn">
-        <div className="bg-[#1C1C1C]/90 backdrop-blur-md border border-[#2D2D2D]/60 p-8 rounded-[24px] shadow-2xl w-full space-y-5">
-          <h1 className="text-3xl font-serif font-normal text-[#F5F2EB] tracking-wide">❤️ Movie Journal</h1>
-          <p className="text-[#A8A59F] text-sm font-sans leading-relaxed">Every movie tells our story. Please sign in to open our journal.</p>
-          <button
-            onClick={handleGoogleLogin}
-            className="w-full bg-[#F5F2EB] text-[#141414] font-medium py-3.5 px-4 rounded-[16px] hover:bg-white transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer shadow-md text-sm font-sans"
-          >
-            <span>🔐</span> Sign in with Google
-          </button>
-        </div>
-      </main>
-    );
   }
 
   const latestMovie = movies.length > 0 ? movies[movies.length - 1] : null;
@@ -370,12 +215,6 @@ export default function Home() {
                 className="bg-[#262626] border border-[#383838] hover:bg-[#303030] text-[#F5F2EB] px-4 py-2 rounded-[16px] text-xs font-medium transition-all transform hover:scale-[1.02] shadow-sm cursor-pointer flex items-center gap-1"
               >
                 + Add Movie
-              </button>
-              <button
-                onClick={handleLogout}
-                className="bg-[#1C1C1C] border border-[#2D2D2D] hover:bg-[#252525] text-[#A8A59F] px-3.5 py-2 rounded-[16px] text-xs transition-all cursor-pointer"
-              >
-                Logout
               </button>
             </div>
           </div>
@@ -630,16 +469,6 @@ export default function Home() {
             </div>
 
             <div>
-              <label className="block text-xs text-[#8A8780] mb-1">Ticket / Selfie Photo</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className="w-full bg-[#141414] border border-[#2D2D2D] p-2.5 rounded-[16px] text-xs text-[#8A8780] file:mr-4 file:py-1.5 file:px-3 file:rounded-[12px] file:border-0 file:text-xs file:font-semibold file:bg-[#F5F2EB] file:text-[#141414] hover:file:bg-white cursor-pointer"
-              />
-            </div>
-
-            <div>
               <label className="block text-xs text-[#8A8780] mb-1">One Memory</label>
               <textarea
                 value={memory}
@@ -732,16 +561,6 @@ export default function Home() {
             </div>
 
             <div>
-              <label className="block text-xs text-[#8A8780] mb-1">Update Ticket / Selfie Photo (optional)</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className="w-full bg-[#141414] border border-[#2D2D2D] p-2.5 rounded-[16px] text-xs text-[#8A8780] file:mr-4 file:py-1.5 file:px-3 file:rounded-[12px] file:border-0 file:text-xs file:font-semibold file:bg-[#F5F2EB] file:text-[#141414] hover:file:bg-white cursor-pointer"
-              />
-            </div>
-
-            <div>
               <label className="block text-xs text-[#8A8780] mb-1">One Memory</label>
               <textarea
                 value={memory}
@@ -798,31 +617,23 @@ export default function Home() {
               <div className="border-t border-[#2A2A2A]"></div>
 
               <div className="space-y-2">
-                <span className="text-[11px] text-[#D94F4F] font-semibold tracking-wider uppercase flex items-center gap-1 font-sans">
-                  <span>❤️</span> One Memory
-                </span>
-                <p className="text-base font-serif text-[#F5F2EB] leading-relaxed italic">
-                  &ldquo;{selectedMovie?.memory}&rdquo;
-                </p>
+                <h3 className="text-[10px] text-[#A8A59F] uppercase tracking-widest font-semibold font-sans">The Memory</h3>
+                <p className="text-base font-serif text-[#F5F2EB] leading-relaxed italic">&ldquo;{selectedMovie?.memory}&rdquo;</p>
               </div>
 
               {selectedMovie?.media_url && (
-                <div className="pt-2 space-y-2">
-                  <p className="text-xs text-[#8A8780] font-medium tracking-wider uppercase font-sans">🎟️ Ticket & Photo Gallery</p>
-                  <div className="rounded-[20px] overflow-hidden border border-[#2D2D2D] bg-[#141414] shadow-md">
-                    <img
-                      src={selectedMovie.media_url}
-                      alt={selectedMovie?.name}
-                      className="w-full object-cover max-h-72 hover:scale-105 transition-transform duration-500"
-                    />
+                <div className="mt-4 rounded-[20px] overflow-hidden border border-[#2D2D2D]/60 shadow-lg relative group">
+                  <img src={selectedMovie.media_url} alt="Movie Memory" className="w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                    <p className="text-[#F5F2EB] text-xs font-serif italic">Our special moment ✨</p>
                   </div>
                 </div>
               )}
-
             </div>
           </div>
         </div>
       )}
+
     </main>
   );
 }
