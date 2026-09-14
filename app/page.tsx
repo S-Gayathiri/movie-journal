@@ -192,7 +192,7 @@ export default function Home() {
     return <main className="min-h-screen bg-[#141414] text-[#F5F2EB] p-6 flex items-center justify-center font-serif tracking-wide animate-fadeIn">Opening our journal...</main>;
   }
 
-  const latestMovie = movies.length > 0 ? movies[movies.length - 1] : null;
+  const latestMovie = movies.length > 0 ? movies[0] : null;
 
   return (
     <main className="min-h-screen bg-[#141414] text-[#F5F2EB] p-6 max-w-md mx-auto font-sans antialiased animate-fadeIn pb-12 relative overflow-hidden">
