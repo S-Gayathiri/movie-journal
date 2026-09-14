@@ -34,6 +34,7 @@ export default function Home() {
   async function fetchMovies() {
     try {
       setLoading(true);
+      const data = await getMovies();
       const sorted = data.sort((a, b) => {
         const timeA = new Date(a.date).getTime();
         const timeB = new Date(b.date).getTime();
