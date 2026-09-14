@@ -37,12 +37,12 @@ export async function getMovies(): Promise<Movie[]> {
     const rows = await sheet.getRows();
 
     return rows.map((row) => ({
-      id: Number(row.get('id')),
-      name: row.get('name') || '',
-      date: row.get('date') || '',
-      theatre: row.get('theatre') || '',
-      rating: row.get('rating') || '',
-      memory: row.get('memory') || '',
+      id: Number(row.get('ID')),
+      name: row.get('Movie Name') || '',
+      date: row.get('Date') || '',
+      theatre: row.get('Theatre') || '',
+      rating: row.get('Rating') || '',
+      memory: row.get('Memory') || '',
     }));
   } catch (error) {
     console.error('Failed to fetch movies', error);
@@ -58,8 +58,13 @@ export async function addMovie(movieData: Omit<Movie, 'id'>) {
     // Auto-generate an ID
     const newId = Date.now();
     const newRow = {
-      id: newId,
-      ...movieData,
+      'ID': newId,
+      'Created At': new Date().toISOString(),
+      'Movie Name': movieData.name,
+      'Date': movieData.date,
+      'Theatre': movieData.theatre,
+      'Rating': movieData.rating,
+      'Memory': movieData.memory,
     };
     
     await sheet.addRow(newRow);
@@ -76,14 +81,14 @@ export async function updateMovie(id: number, movieData: Omit<Movie, 'id'>) {
     const sheet = doc.sheetsByIndex[0];
     const rows = await sheet.getRows();
     
-    const targetRow = rows.find(r => Number(r.get('id')) === id);
+    const targetRow = rows.find(r => Number(r.get('ID')) === id);
     if (!targetRow) throw new Error('Movie not found');
     
-    targetRow.set('name', movieData.name);
-    targetRow.set('date', movieData.date);
-    targetRow.set('theatre', movieData.theatre);
-    targetRow.set('rating', movieData.rating);
-    targetRow.set('memory', movieData.memory);
+    targetRow.set('Movie Name', movieData.name);
+    targetRow.set('Date', movieData.date);
+    targetRow.set('Theatre', movieData.theatre);
+    targetRow.set('Rating', movieData.rating);
+    targetRow.set('Memory', movieData.memory);
     
     await targetRow.save();
     return { success: true, movie: { id, ...movieData } };
@@ -99,7 +104,7 @@ export async function deleteMovie(id: number) {
     const sheet = doc.sheetsByIndex[0];
     const rows = await sheet.getRows();
     
-    const targetRow = rows.find(r => Number(r.get('id')) === id);
+    const targetRow = rows.find(r => Number(r.get('ID')) === id);
     if (!targetRow) throw new Error('Movie not found');
     
     await targetRow.delete();
