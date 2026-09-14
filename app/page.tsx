@@ -475,6 +475,7 @@ export default function Home() {
                 placeholder="e.g., BSR Mall"
                 required
                 className="w-full bg-[#141414] border border-[#2D2D2D] p-3 rounded-[16px] text-sm text-[#F5F2EB] focus:border-[#E6C687] outline-none transition-colors"
+                list="theatre-options"
               />
             </div>
 
@@ -567,6 +568,7 @@ export default function Home() {
                 onChange={(e) => setTheatre(e.target.value)}
                 required
                 className="w-full bg-[#141414] border border-[#2D2D2D] p-3 rounded-[16px] text-sm text-[#F5F2EB] focus:border-[#E6C687] outline-none transition-colors"
+                list="theatre-options"
               />
             </div>
 
@@ -660,6 +662,15 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Reusable DataList for Theatre Suggestions */}
+      <datalist id="theatre-options">
+        {Array.from(new Set(movies.map((m) => m.theatre)))
+          .filter((t) => t && t.trim() !== '')
+          .map((t) => (
+            <option key={t} value={t} />
+          ))}
+      </datalist>
 
     </main>
   );
